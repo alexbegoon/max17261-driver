@@ -26,24 +26,26 @@
 #define MAX17261_ADDRESS	0x6C
 #define	MAX17261_RB_THRESHOLD	3
 
-float r_sense = 0.01;
-#define CAPACITY_MULTIPLIER_mAH = (5e-3)/r_sense; //refer to row "Capacity"
-#define CURRENT_MULTIPLIER_mV = (1.5625e-3)/r_sense; //refer to row "Current"
-#define VOLTAGE_MULTIPLIER_V = 7.8125e-5; //refer to row "Voltage"
-#define TIME_MULTIPLIER_MIN = 5.625/60.0; //Least Significant Bit= 5.625 seconds, 3600 converts it to Hours. refer to AN6358 pg 13 figure 1.3 in row "Time"
-#define PERCENTAGE_MULTIPLIER = 1.0/256.0; //refer to row "Percentage"
+#define R_SENSE 		0.01
+#define CAPACITY_MULTIPLIER_mAH	(5e-3)/R_SENSE //refer to row "Capacity"
+#define CURRENT_MULTIPLIER_mV  	0.15625 //refer to row "Current"
+#define VOLTAGE_MULTIPLIER_V  	7.8125e-2 //refer to row "Voltage"
+#define TIME_MULTIPLIER_MIN  	5.625/60.0 //Least Significant Bit= 5.625 seconds, 3600 converts it to Hours. refer to AN6358 pg 13 figure 1.3 in row "Time"
+#define PERCENTAGE_MULTIPLIER  	1.0/256.0 //refer to row "Percentage"
 
-enum MAX17261_RegAddr {
-	Status = 0x00, //Maintains all flags related to alert thresholds and battery insertion or removal.
-	VCell = 0x09, //VCell reports the voltage measured between BATT and CSP.
-	AvgVCell = 0x19, //The AvgVCell register reports an average of the VCell register readings.
-	Current = 0x0A, //Voltage between the CSP and CSN pins, and would need to convert to current
-	AvgCurrent = 0x0B, //The AvgCurrent register reports an average of Current register readings
-	RepSOC = 0x06, //The Reported State of Charge of connected battery. Refer to AN6358 page 23 and 13
-	RepCAP = 0x05, //Reported Capacity. Refer to page 23 and 13 of AN6358.
-	TimeToEmpty = 0x11, //How long before battery is empty (in ms). Refer to page 24 and 13 of AN6358
-	DesignCap = 0x18, //Capacity of battery inserted, not typically used for user requested capacity
-};
+#define	MAX17261_Status		0x00 //Maintains all flags related to alert thresholds and battery insertion or removal.
+#define	MAX17261_VCell  	0x09 //VCell reports the voltage measured between BATT and CSP.
+#define	MAX17261_AvgVCell  	0x19 //The AvgVCell register reports an average of the VCell register readings.
+#define	MAX17261_CURRENT  	0x0A //Voltage between the CSP and CSN pins, and would need to convert to current
+#define	MAX17261_AvgCurrent  	0x0B //The AvgCurrent register reports an average of Current register readings
+#define	MAX17261_RepSOC  	0x06 //The Reported State of Charge of connected battery. Refer to AN6358 page 23 and 13
+#define	MAX17261_RepCAP  	0x05 //Reported Capacity. Refer to page 23 and 13 of AN6358.
+#define	MAX17261_TimeToEmpty	0x11 //How long before battery is empty (in ms). Refer to page 24 and 13 of AN6358
+#define	MAX17261_DesignCap  	0x18 //Capacity of battery inserted, not typically used for user requested capacity
+#define MAX17261_SoftWakeup	0x60
+#define MAX17261_FStat		0x3D
+#define MAX17261_HibCfg		0xBA
+#define MAX17261_ModelCFG	0xDB
 
 typedef uint8_t (*max17261_write)(uint8_t reg, uint16_t value);
 typedef uint8_t (*max17261_read)(uint8_t reg, uint16_t *value);
@@ -61,5 +63,22 @@ struct max17261_conf {
 	uint16_t ChargeVoltage; // charge voltage in millivolts
 };
 
+uint16_t
+max17261_get_reported_capacity(struct max17261_conf *conf);
+uint16_t
+max17261_get_instantaneous_voltage(struct max17261_conf *conf);
+uint16_t
+max17261_get_average_voltage(struct max17261_conf *conf);
+int16_t
+max17261_get_instantaneous_current(struct max17261_conf *conf);
+uint16_t
+max17261_get_state_of_charge(struct max17261_conf *conf);
+void
+max17261_get_minmax_voltage(struct max17261_conf *conf, uint16_t *min,
+                            uint16_t *max);
+uint16_t
+max17261_get_design_capacity(struct max17261_conf *conf);
+void
+max17261_set_design_capacity(struct max17261_conf *conf, uint16_t capacity);
 
 #endif
