@@ -23,44 +23,49 @@
 uint8_t
 max17261_init(struct max17261_conf *conf)
 {
-	uint8_t ret;
+	uint8_t ret = 0;
 	uint16_t value;
 
 	// check for power on reset
-	ret = conf->read(Status, &value) & 0x0002;
-	if (value != 0) {
+	ret = conf->read(MAX17261_Status, &value);
+	if ((value & 0x0002) != 0) {
 		// Delay until FSTAT.DNR bit == 0
-		ret = conf->read(0x3D, &value);
+		ret |= conf->read(MAX17261_FStat, &value);
 		while (value & 1) {
 			conf->delay_ms(10);
-			ret = conf->read(0x3D, &value);
+			ret |= conf->read(MAX17261_FStat, &value);
 		}
 		// Initialize Configuration
-		conf->read(0xBA, &conf->HibCFG); //Store original HibCFG value
-		conf->write(0x60, 0x90); // Exit Hibernate Mode step 1
-		conf->write(0xBA, 0x0); // Exit Hibernate Mode step 2
-		conf->write(0x60, 0x0); // Exit Hibernate Mode step 3
+		ret |= conf->read(MAX17261_HibCfg, &conf->HibCFG); //Store original HibCFG value
+		ret |= conf->write(MAX17261_SoftWakeup, 0x90); // Exit Hibernate Mode step 1
+		ret |= conf->write(MAX17261_HibCfg, 0x0); // Exit Hibernate Mode step 2
+		ret |= conf->write(MAX17261_SoftWakeup, 0x0); // Exit Hibernate Mode step 3
+
+		ret |= conf->write(MAX17261_DesignCap, conf->DesignCap);
+//		ret |= conf->write(MAX17261_DesignCap, conf->IchgTerm);
+//		ret |= conf->write(MAX17261_DesignCap, conf->VEmpty);
 
 		if (conf->ChargeVoltage > 4.275)
-			conf->write(0xDB, 0x8400) ;   // Write ModelCFG
+			ret |= conf->write(MAX17261_ModelCFG, 0x8400) ;   // Write ModelCFG
 		else
-			conf->write(0xDB, 0x8000) ;   // Write ModelCFG
+			ret |= conf->write(MAX17261_ModelCFG, 0x8000) ;   // Write ModelCFG
 		//Poll ModelCFG.Refresh(highest bit),
-		conf->read(0xDB, &value);
+		ret |= conf->read(0xDB, &value);
 		while (value & 0x8000) { //do not continue until ModelCFG.Refresh==0
 			conf->delay_ms(10);
-			conf->read(0xDB, &value);
+			ret |= conf->read(MAX17261_ModelCFG, &value);
 		}
 
-		conf->write(0xBA, conf->HibCFG) ;   // Restore Original HibCFG value
+		ret |= conf->write(MAX17261_HibCfg,
+		                   conf->HibCFG) ;   // Restore Original HibCFG value
 		// Initialization complete
-		ret = conf->read(Status, &value); //Read Status
-		conf->write_verify(Status, value
-		                   && 0xFFFD); //Write and Verify Status with POR bit Cleared
+		ret |= conf->read(MAX17261_Status, &value); //Read Status
+		ret |= conf->write_verify(MAX17261_Status, value
+		                          && 0xFFFD); //Write and Verify Status with POR bit Cleared
 
 	}
 
-	return 0;
+	return ret;
 }
 
 uint16_t
@@ -68,7 +73,7 @@ max17261_get_state_of_charge(struct max17261_conf *conf)
 {
 	uint16_t value;
 	max17261_init(conf);
-	conf->read(RepSOC, &value);
+	conf->read(MAX17261_RepSOC, &value);
 	return value;
 }
 
@@ -77,33 +82,64 @@ max17261_get_reported_capacity(struct max17261_conf *conf)
 {
 	uint16_t value;
 	max17261_init(conf);
-	conf->read(RepCAP, &value);
+	conf->read(MAX17261_RepCAP, &value);
 	return value;
 }
 
-void max17261_set_design_capacity(uint16_t capacity) {
-
-}
-
-void max17261_get_design_capacity() {
-
-}
-
-/*float max17261_get_instantaneous_current()
+void
+max17261_set_design_capacity(struct max17261_conf *conf, uint16_t capacity)
 {
-   	int16_t current_raw = readReg16Bit(Current);
-	return current_raw * current_multiplier_mV;
+  conf->write(MAX17261_DesignCap, capacity);
 }
 
-float max17261_get_instantaneous_voltage()
+uint16_t
+max17261_get_design_capacity(struct max17261_conf *conf)
 {
-   	uint16_t voltage_raw = readReg16Bit(VCell);
-	return voltage_raw * voltage_multiplier_V;
+	uint16_t value;
+	max17261_init(conf);
+	conf->read(MAX17261_DesignCap, &value);
+	return value;
 }
 
-float max17261_get_time_to_empty()
+uint16_t
+max17261_get_instantaneous_voltage(struct max17261_conf *conf)
 {
-	uint16_t TTE_raw = readReg16Bit(TimeToEmpty);
-	return TTE_raw * time_multiplier_Hours;
-}*/
+	uint16_t value;
+	max17261_init(conf);
+	conf->read(MAX17261_VCell, &value);
+	value *= VOLTAGE_MULTIPLIER_V;
+	return value;
+}
+
+uint16_t
+max17261_get_average_voltage(struct max17261_conf *conf)
+{
+	uint16_t value;
+	max17261_init(conf);
+	conf->read(MAX17261_AvgVCell, &value);
+	value *= VOLTAGE_MULTIPLIER_V;
+	return value;
+}
+
+void
+max17261_get_minmax_voltage(struct max17261_conf *conf, uint16_t *min,
+                            uint16_t *max)
+{
+	uint16_t value;
+	max17261_init(conf);
+	conf->read(MAX17261_AvgVCell, &value);
+	*min = (value & 0xFF) * 20;
+	*max = (value >> 8) * 20;
+}
+
+int16_t
+max17261_get_instantaneous_current(struct max17261_conf *conf)
+{
+	int16_t value;
+	max17261_init(conf);
+	conf->read(MAX17261_CURRENT, (uint16_t *) &value);
+	value = value * CURRENT_MULTIPLIER_mV;
+	return value;
+}
+
 
