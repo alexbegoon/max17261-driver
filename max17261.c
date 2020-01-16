@@ -42,8 +42,8 @@ max17261_init(struct max17261_conf *conf)
 		ret |= conf->write(MAX17261_SoftWakeup, 0x0); // Exit Hibernate Mode step 3
 
 		ret |= conf->write(MAX17261_DesignCap, conf->DesignCap);
-//		ret |= conf->write(MAX17261_DesignCap, conf->IchgTerm);
-//		ret |= conf->write(MAX17261_DesignCap, conf->VEmpty);
+		ret |= conf->write(MAX17261_DesignCap, conf->IchgTerm);
+		ret |= conf->write(MAX17261_DesignCap, conf->VEmpty);
 
 		if (conf->ChargeVoltage > 4.275)
 			ret |= conf->write(MAX17261_ModelCFG, 0x8400) ;   // Write ModelCFG
@@ -62,19 +62,19 @@ max17261_init(struct max17261_conf *conf)
 		ret |= conf->read(MAX17261_Status, &value); //Read Status
 		ret |= conf->write_verify(MAX17261_Status, value
 		                          && 0xFFFD); //Write and Verify Status with POR bit Cleared
-
+		ret |= conf->write(MAX17261_Config, 0x2210);
 	}
 
 	return ret;
 }
 
-uint16_t
-max17261_get_state_of_charge(struct max17261_conf *conf)
+uint8_t
+max17261_get_SOC(struct max17261_conf *conf)
 {
 	uint16_t value;
 	max17261_init(conf);
 	conf->read(MAX17261_RepSOC, &value);
-	return value;
+	return (uint8_t)(value >> 8);
 }
 
 uint16_t
@@ -89,7 +89,7 @@ max17261_get_reported_capacity(struct max17261_conf *conf)
 void
 max17261_set_design_capacity(struct max17261_conf *conf, uint16_t capacity)
 {
-  conf->write(MAX17261_DesignCap, capacity);
+	conf->write(MAX17261_DesignCap, capacity);
 }
 
 uint16_t
@@ -102,7 +102,7 @@ max17261_get_design_capacity(struct max17261_conf *conf)
 }
 
 uint16_t
-max17261_get_instantaneous_voltage(struct max17261_conf *conf)
+max17261_get_voltage(struct max17261_conf *conf)
 {
 	uint16_t value;
 	max17261_init(conf);
@@ -127,19 +127,88 @@ max17261_get_minmax_voltage(struct max17261_conf *conf, uint16_t *min,
 {
 	uint16_t value;
 	max17261_init(conf);
-	conf->read(MAX17261_AvgVCell, &value);
+	conf->read(MAX17261_MaxMinVolt, &value);
 	*min = (value & 0xFF) * 20;
-	*max = (value >> 8) * 20;
+	*max = ((value >> 8) & 0xFF) * 20;
 }
 
 int16_t
-max17261_get_instantaneous_current(struct max17261_conf *conf)
+max17261_get_current(struct max17261_conf *conf)
 {
 	int16_t value;
 	max17261_init(conf);
-	conf->read(MAX17261_CURRENT, (uint16_t *) &value);
-	value = value * CURRENT_MULTIPLIER_mV;
+	conf->read(MAX17261_Current, (uint16_t *) &value);
+	value = value * CURRENT_MULTIPLIER;
 	return value;
 }
 
+int16_t
+max17261_get_average_current(struct max17261_conf *conf)
+{
+	int16_t value;
+	max17261_init(conf);
+	conf->read(MAX17261_AvgCurrent, (uint16_t *) &value);
+	value = value * CURRENT_MULTIPLIER;
+	return value;
+}
 
+void
+max17261_get_minmax_current(struct max17261_conf *conf, int16_t *min,
+                            int16_t *max)
+{
+	uint16_t value;
+	max17261_init(conf);
+	conf->read(MAX17261_MaxMinCurr, &value);
+	*min = ((int8_t)(value & 0xFF)) * CURRENT_MULTIPLIER_MINMAX;
+	*max = ((int8_t)(value >> 8)) * CURRENT_MULTIPLIER_MINMAX;
+}
+
+int8_t
+max17261_get_die_temperature(struct max17261_conf *conf)
+{
+	int16_t value;
+	max17261_init(conf);
+	conf->read(MAX17261_DieTemp, (uint16_t *) &value);
+	value >>= 8;
+	return value;
+}
+
+int8_t
+max17261_get_temperature(struct max17261_conf *conf)
+{
+	int16_t value;
+	max17261_init(conf);
+	conf->read(MAX17261_Temp, (uint16_t *) &value);
+	value >>= 8;
+	return value;
+}
+
+int8_t
+max17261_get_average_temperature(struct max17261_conf *conf)
+{
+	int16_t value;
+	max17261_init(conf);
+	conf->read(MAX17261_AvgTA, (uint16_t *) &value);
+	value >>= 8;
+	return value;
+}
+
+void
+max17261_get_minmax_temperature(struct max17261_conf *conf, int8_t *min,
+                                int8_t *max)
+{
+	uint16_t value;
+	max17261_init(conf);
+	conf->read(MAX17261_MaxMinTemp, &value);
+	*min = (value & 0xFF) * CURRENT_MULTIPLIER_MINMAX;
+	*max = ((value >> 8) & 0xFF) * CURRENT_MULTIPLIER_MINMAX;
+}
+
+uint16_t
+max17261_get_TTE(struct max17261_conf *conf)
+{
+	uint16_t value;
+	max17261_init(conf);
+	conf->read(MAX17261_TTE, &value);
+	return value * TIME_MULTIPLIER_MIN;
+}
