@@ -72,7 +72,6 @@ uint8_t
 max17261_get_SOC(struct max17261_conf *conf)
 {
 	uint16_t value;
-	max17261_init(conf);
 	conf->read(MAX17261_RepSOC, &value);
 	return (uint8_t)(value >> 8);
 }
@@ -81,7 +80,6 @@ uint16_t
 max17261_get_reported_capacity(struct max17261_conf *conf)
 {
 	uint16_t value;
-	max17261_init(conf);
 	conf->read(MAX17261_RepCAP, &value);
 	return value;
 }
@@ -96,7 +94,6 @@ uint16_t
 max17261_get_design_capacity(struct max17261_conf *conf)
 {
 	uint16_t value;
-	max17261_init(conf);
 	conf->read(MAX17261_DesignCap, &value);
 	return value;
 }
@@ -105,7 +102,6 @@ uint16_t
 max17261_get_voltage(struct max17261_conf *conf)
 {
 	uint16_t value;
-	max17261_init(conf);
 	conf->read(MAX17261_VCell, &value);
 	value *= VOLTAGE_MULTIPLIER_V;
 	return value;
@@ -115,7 +111,6 @@ uint16_t
 max17261_get_average_voltage(struct max17261_conf *conf)
 {
 	uint16_t value;
-	max17261_init(conf);
 	conf->read(MAX17261_AvgVCell, &value);
 	value *= VOLTAGE_MULTIPLIER_V;
 	return value;
@@ -126,7 +121,6 @@ max17261_get_minmax_voltage(struct max17261_conf *conf, uint16_t *min,
                             uint16_t *max)
 {
 	uint16_t value;
-	max17261_init(conf);
 	conf->read(MAX17261_MaxMinVolt, &value);
 	*min = (value & 0xFF) * 20;
 	*max = ((value >> 8) & 0xFF) * 20;
@@ -136,7 +130,6 @@ int16_t
 max17261_get_current(struct max17261_conf *conf)
 {
 	int16_t value;
-	max17261_init(conf);
 	conf->read(MAX17261_Current, (uint16_t *) &value);
 	value = value * CURRENT_MULTIPLIER;
 	return value;
@@ -146,7 +139,6 @@ int16_t
 max17261_get_average_current(struct max17261_conf *conf)
 {
 	int16_t value;
-	max17261_init(conf);
 	conf->read(MAX17261_AvgCurrent, (uint16_t *) &value);
 	value = value * CURRENT_MULTIPLIER;
 	return value;
@@ -157,7 +149,6 @@ max17261_get_minmax_current(struct max17261_conf *conf, int16_t *min,
                             int16_t *max)
 {
 	uint16_t value;
-	max17261_init(conf);
 	conf->read(MAX17261_MaxMinCurr, &value);
 	*min = ((int8_t)(value & 0xFF)) * CURRENT_MULTIPLIER_MINMAX;
 	*max = ((int8_t)(value >> 8)) * CURRENT_MULTIPLIER_MINMAX;
@@ -167,7 +158,6 @@ int8_t
 max17261_get_die_temperature(struct max17261_conf *conf)
 {
 	int16_t value;
-	max17261_init(conf);
 	conf->read(MAX17261_DieTemp, (uint16_t *) &value);
 	value >>= 8;
 	return value;
@@ -177,7 +167,6 @@ int8_t
 max17261_get_temperature(struct max17261_conf *conf)
 {
 	int16_t value;
-	max17261_init(conf);
 	conf->read(MAX17261_Temp, (uint16_t *) &value);
 	value >>= 8;
 	return value;
@@ -187,7 +176,6 @@ int8_t
 max17261_get_average_temperature(struct max17261_conf *conf)
 {
 	int16_t value;
-	max17261_init(conf);
 	conf->read(MAX17261_AvgTA, (uint16_t *) &value);
 	value >>= 8;
 	return value;
@@ -198,7 +186,6 @@ max17261_get_minmax_temperature(struct max17261_conf *conf, int8_t *min,
                                 int8_t *max)
 {
 	uint16_t value;
-	max17261_init(conf);
 	conf->read(MAX17261_MaxMinTemp, &value);
 	*min = (value & 0xFF) * CURRENT_MULTIPLIER_MINMAX;
 	*max = ((value >> 8) & 0xFF) * CURRENT_MULTIPLIER_MINMAX;
@@ -208,7 +195,6 @@ uint16_t
 max17261_get_TTE(struct max17261_conf *conf)
 {
 	uint16_t value;
-	max17261_init(conf);
 	conf->read(MAX17261_TTE, &value);
 	return value * TIME_MULTIPLIER_MIN;
 }
