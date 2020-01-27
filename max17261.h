@@ -78,6 +78,8 @@ struct max17261_conf {
 	uint16_t ChargeVoltage; // charge voltage in millivolts
 };
 
+uint8_t
+max17261_init(struct max17261_conf *conf);
 uint16_t
 max17261_get_reported_capacity(struct max17261_conf *conf);
 uint16_t
