@@ -67,10 +67,12 @@ typedef uint8_t (*max17261_read)(uint8_t reg, uint16_t *value);
 typedef uint8_t (*max17261_delay)(uint32_t period);
 
 struct max17261_conf {
+#ifndef USE_WEAK
 	max17261_read read;
 	max17261_write write;
 	max17261_write write_verify;
 	max17261_delay delay_ms;
+#endif
 	uint16_t HibCFG;
 	uint16_t DesignCap;
 	uint16_t IchgTerm;
@@ -110,4 +112,12 @@ int8_t
 max17261_get_die_temperature(struct max17261_conf *conf);
 uint16_t
 max17261_get_TTE(struct max17261_conf *conf);
+uint8_t
+max17261_read_word(struct max17261_conf *conf, uint8_t reg, uint16_t *value);
+uint8_t
+max17261_write_word(struct max17261_conf *conf, uint8_t reg, uint16_t value);
+uint8_t
+max17261_write_verify(struct max17261_conf *conf, uint8_t reg, uint16_t value);
+uint8_t
+max17261_delay_ms(struct max17261_conf *conf, uint32_t period);
 #endif

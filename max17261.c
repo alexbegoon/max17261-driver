@@ -27,42 +27,48 @@ max17261_init(struct max17261_conf *conf)
 	uint16_t value;
 
 	// check for power on reset
-	ret = conf->read(MAX17261_Status, &value);
+	ret = max17261_read_word(conf, MAX17261_Status, &value);
 	if ((value & 0x0002) != 0 && ret == 0) {
 		// Delay until FSTAT.DNR bit == 0
-		ret |= conf->read(MAX17261_FStat, &value);
+		ret |= max17261_read_word(conf, MAX17261_FStat, &value);
 		while (value & 1) {
-			conf->delay_ms(10);
-			ret |= conf->read(MAX17261_FStat, &value);
+			max17261_delay_ms(conf, 10);
+			ret |= max17261_read_word(conf, MAX17261_FStat, &value);
 		}
 		// Initialize Configuration
-		ret |= conf->read(MAX17261_HibCfg, &conf->HibCFG); //Store original HibCFG value
-		ret |= conf->write(MAX17261_SoftWakeup, 0x90); // Exit Hibernate Mode step 1
-		ret |= conf->write(MAX17261_HibCfg, 0x0); // Exit Hibernate Mode step 2
-		ret |= conf->write(MAX17261_SoftWakeup, 0x0); // Exit Hibernate Mode step 3
+		ret |= max17261_read_word(conf, MAX17261_HibCfg,
+		                          &conf->HibCFG); //Store original HibCFG value
+		ret |= max17261_write_word(conf, MAX17261_SoftWakeup,
+		                           0x90); // Exit Hibernate Mode step 1
+		ret |= max17261_write_word(conf, MAX17261_HibCfg,
+		                           0x0); // Exit Hibernate Mode step 2
+		ret |= max17261_write_word(conf, MAX17261_SoftWakeup,
+		                           0x0); // Exit Hibernate Mode step 3
 
-		ret |= conf->write(MAX17261_DesignCap, conf->DesignCap);
-		ret |= conf->write(MAX17261_DesignCap, conf->IchgTerm);
-		ret |= conf->write(MAX17261_DesignCap, conf->VEmpty);
+		ret |= max17261_write_word(conf, MAX17261_DesignCap, conf->DesignCap);
+		ret |= max17261_write_word(conf, MAX17261_DesignCap, conf->IchgTerm);
+		ret |= max17261_write_word(conf, MAX17261_DesignCap, conf->VEmpty);
 
 		if (conf->ChargeVoltage > 4.275)
-			ret |= conf->write(MAX17261_ModelCFG, 0x8400) ;   // Write ModelCFG
+			ret |= max17261_write_word(conf, MAX17261_ModelCFG,
+			                           0x8400) ;   // Write ModelCFG
 		else
-			ret |= conf->write(MAX17261_ModelCFG, 0x8000) ;   // Write ModelCFG
+			ret |= max17261_write_word(conf, MAX17261_ModelCFG,
+			                           0x8000) ;   // Write ModelCFG
 		//Poll ModelCFG.Refresh(highest bit),
-		ret |= conf->read(0xDB, &value);
+		ret |= max17261_read_word(conf, 0xDB, &value);
 		while (value & 0x8000) { //do not continue until ModelCFG.Refresh==0
-			conf->delay_ms(10);
-			ret |= conf->read(MAX17261_ModelCFG, &value);
+			max17261_delay_ms(conf, 10);
+			ret |= max17261_read_word(conf, MAX17261_ModelCFG, &value);
 		}
 
-		ret |= conf->write(MAX17261_HibCfg,
-		                   conf->HibCFG) ;   // Restore Original HibCFG value
+		ret |= max17261_write_word(conf, MAX17261_HibCfg,
+		                           conf->HibCFG) ;   // Restore Original HibCFG value
 		// Initialization complete
-		ret |= conf->read(MAX17261_Status, &value); //Read Status
-		ret |= conf->write_verify(MAX17261_Status, value
-		                          && 0xFFFD); //Write and Verify Status with POR bit Cleared
-		ret |= conf->write(MAX17261_Config, 0x2210);
+		ret |= max17261_read_word(conf, MAX17261_Status, &value); //Read Status
+		ret |= max17261_write_verify(conf, MAX17261_Status, value
+		                             && 0xFFFD); //Write and Verify Status with POR bit Cleared
+		ret |= max17261_write_word(conf, MAX17261_Config, 0x2210);
 	}
 
 	return ret;
@@ -72,7 +78,7 @@ uint8_t
 max17261_get_SOC(struct max17261_conf *conf)
 {
 	uint16_t value;
-	conf->read(MAX17261_RepSOC, &value);
+	max17261_read_word(conf, MAX17261_RepSOC, &value);
 	return (uint8_t)(value >> 8);
 }
 
@@ -80,21 +86,21 @@ uint16_t
 max17261_get_reported_capacity(struct max17261_conf *conf)
 {
 	uint16_t value;
-	conf->read(MAX17261_RepCAP, &value);
+	max17261_read_word(conf, MAX17261_RepCAP, &value);
 	return value;
 }
 
 void
 max17261_set_design_capacity(struct max17261_conf *conf, uint16_t capacity)
 {
-	conf->write(MAX17261_DesignCap, capacity);
+	max17261_write_word(conf, MAX17261_DesignCap, capacity);
 }
 
 uint16_t
 max17261_get_design_capacity(struct max17261_conf *conf)
 {
 	uint16_t value;
-	conf->read(MAX17261_DesignCap, &value);
+	max17261_read_word(conf, MAX17261_DesignCap, &value);
 	return value;
 }
 
@@ -102,7 +108,7 @@ uint16_t
 max17261_get_voltage(struct max17261_conf *conf)
 {
 	uint16_t value;
-	conf->read(MAX17261_VCell, &value);
+	max17261_read_word(conf, MAX17261_VCell, &value);
 	value *= VOLTAGE_MULTIPLIER_V;
 	return value;
 }
@@ -111,7 +117,7 @@ uint16_t
 max17261_get_average_voltage(struct max17261_conf *conf)
 {
 	uint16_t value;
-	conf->read(MAX17261_AvgVCell, &value);
+	max17261_read_word(conf, MAX17261_AvgVCell, &value);
 	value *= VOLTAGE_MULTIPLIER_V;
 	return value;
 }
@@ -121,7 +127,7 @@ max17261_get_minmax_voltage(struct max17261_conf *conf, uint16_t *min,
                             uint16_t *max)
 {
 	uint16_t value;
-	conf->read(MAX17261_MaxMinVolt, &value);
+	max17261_read_word(conf, MAX17261_MaxMinVolt, &value);
 	*min = (value & 0xFF) * 20;
 	*max = ((value >> 8) & 0xFF) * 20;
 }
@@ -130,7 +136,7 @@ int16_t
 max17261_get_current(struct max17261_conf *conf)
 {
 	int16_t value;
-	conf->read(MAX17261_Current, (uint16_t *) &value);
+	max17261_read_word(conf, MAX17261_Current, (uint16_t *) &value);
 	value = value * CURRENT_MULTIPLIER;
 	return value;
 }
@@ -139,7 +145,7 @@ int16_t
 max17261_get_average_current(struct max17261_conf *conf)
 {
 	int16_t value;
-	conf->read(MAX17261_AvgCurrent, (uint16_t *) &value);
+	max17261_read_word(conf, MAX17261_AvgCurrent, (uint16_t *) &value);
 	value = value * CURRENT_MULTIPLIER;
 	return value;
 }
@@ -149,7 +155,7 @@ max17261_get_minmax_current(struct max17261_conf *conf, int16_t *min,
                             int16_t *max)
 {
 	uint16_t value;
-	conf->read(MAX17261_MaxMinCurr, &value);
+	max17261_read_word(conf, MAX17261_MaxMinCurr, &value);
 	*min = ((int8_t)(value & 0xFF)) * CURRENT_MULTIPLIER_MINMAX;
 	*max = ((int8_t)(value >> 8)) * CURRENT_MULTIPLIER_MINMAX;
 }
@@ -158,7 +164,7 @@ int8_t
 max17261_get_die_temperature(struct max17261_conf *conf)
 {
 	int16_t value;
-	conf->read(MAX17261_DieTemp, (uint16_t *) &value);
+	max17261_read_word(conf, MAX17261_DieTemp, (uint16_t *) &value);
 	value >>= 8;
 	return value;
 }
@@ -167,7 +173,7 @@ int8_t
 max17261_get_temperature(struct max17261_conf *conf)
 {
 	int16_t value;
-	conf->read(MAX17261_Temp, (uint16_t *) &value);
+	max17261_read_word(conf, MAX17261_Temp, (uint16_t *) &value);
 	value >>= 8;
 	return value;
 }
@@ -176,7 +182,7 @@ int8_t
 max17261_get_average_temperature(struct max17261_conf *conf)
 {
 	int16_t value;
-	conf->read(MAX17261_AvgTA, (uint16_t *) &value);
+	max17261_read_word(conf, MAX17261_AvgTA, (uint16_t *) &value);
 	value >>= 8;
 	return value;
 }
@@ -186,7 +192,7 @@ max17261_get_minmax_temperature(struct max17261_conf *conf, int8_t *min,
                                 int8_t *max)
 {
 	uint16_t value;
-	conf->read(MAX17261_MaxMinTemp, &value);
+	max17261_read_word(conf, MAX17261_MaxMinTemp, &value);
 	*min = (value & 0xFF) * CURRENT_MULTIPLIER_MINMAX;
 	*max = ((value >> 8) & 0xFF) * CURRENT_MULTIPLIER_MINMAX;
 }
@@ -195,6 +201,60 @@ uint16_t
 max17261_get_TTE(struct max17261_conf *conf)
 {
 	uint16_t value;
-	conf->read(MAX17261_TTE, &value);
+	max17261_read_word(conf, MAX17261_TTE, &value);
 	return value * TIME_MULTIPLIER_MIN;
+}
+
+/**
+ * @brief I2C Read function wrapper
+ * Reads 16bit data from device
+ * @param conf
+ * @param reg Register to read from
+ * @param value Pointer to write value
+ * @return 0 on success error code otherwise
+ */
+__attribute__((weak)) uint8_t
+max17261_read_word(struct max17261_conf *conf, uint8_t reg, uint16_t *value)
+{
+	return conf->read(reg, value);
+}
+
+/**
+ * @brief I2C Write function wrapper
+ * Writes 16bit data to device
+ * @param conf
+ * @param reg Register to write to
+ * @param value Value to write
+ * @return 0 on success error code otherwise
+ */
+__attribute__((weak)) uint8_t
+max17261_write_word(struct max17261_conf *conf, uint8_t reg, uint16_t value)
+{
+	return conf->write(reg, value);
+}
+
+/**
+ * @brief I2C Write with verify function
+ * Writes 16bit data to device and verifies content
+ * @param conf
+ * @param reg Register to write to
+ * @param value Value to write
+ * @return 0 on success error code otherwise
+ */
+__attribute__((weak)) uint8_t
+max17261_write_verify(struct max17261_conf *conf, uint8_t reg, uint16_t value)
+{
+	return conf->write_verify(reg, value);
+}
+
+/**
+ * @brief Delay function
+ * @param conf
+ * @param period
+ * @return
+ */
+__attribute__((weak)) uint8_t
+max17261_delay_ms(struct max17261_conf *conf, uint32_t period)
+{
+	return conf->delay_ms(period);
 }
