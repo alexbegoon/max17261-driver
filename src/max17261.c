@@ -216,7 +216,11 @@ max17261_get_TTE(struct max17261_conf *conf)
 __attribute__((weak)) uint8_t
 max17261_read_word(struct max17261_conf *conf, uint8_t reg, uint16_t *value)
 {
+#ifndef MAX17261_USE_WEAK
 	return conf->read(reg, value);
+#else
+	return 0;
+#endif
 }
 
 /**
@@ -230,7 +234,11 @@ max17261_read_word(struct max17261_conf *conf, uint8_t reg, uint16_t *value)
 __attribute__((weak)) uint8_t
 max17261_write_word(struct max17261_conf *conf, uint8_t reg, uint16_t value)
 {
+#ifndef MAX17261_USE_WEAK
 	return conf->write(reg, value);
+#else
+	return 0;
+#endif
 }
 
 /**
@@ -244,7 +252,11 @@ max17261_write_word(struct max17261_conf *conf, uint8_t reg, uint16_t value)
 __attribute__((weak)) uint8_t
 max17261_write_verify(struct max17261_conf *conf, uint8_t reg, uint16_t value)
 {
+#ifndef MAX17261_USE_WEAK
 	return conf->write_verify(reg, value);
+#else
+	return 0;
+#endif
 }
 
 /**
@@ -256,5 +268,9 @@ max17261_write_verify(struct max17261_conf *conf, uint8_t reg, uint16_t value)
 __attribute__((weak)) uint8_t
 max17261_delay_ms(struct max17261_conf *conf, uint32_t period)
 {
+#ifndef MAX17261_USE_WEAK
 	return conf->delay_ms(period);
+#else
+	return 0;
+#endif
 }

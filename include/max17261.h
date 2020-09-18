@@ -67,10 +67,12 @@ typedef uint8_t (*max17261_read)(uint8_t reg, uint16_t *value);
 typedef uint8_t (*max17261_delay)(uint32_t period);
 
 struct max17261_conf {
+#ifndef MAX17261_USE_WEAK
 	max17261_read read;
 	max17261_write write;
 	max17261_write write_verify;
 	max17261_delay delay_ms;
+#endif
 	uint16_t HibCFG;
 	uint16_t DesignCap;
 	uint16_t IchgTerm;
