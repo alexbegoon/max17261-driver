@@ -18,7 +18,7 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#include "max17261.h"
+#include "../include/max17261.h"
 
 uint8_t
 max17261_init(struct max17261_conf *conf)
