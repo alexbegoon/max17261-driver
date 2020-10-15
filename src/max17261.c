@@ -46,8 +46,8 @@ max17261_init(struct max17261_conf *conf)
 		                           0x0); // Exit Hibernate Mode step 3
 
 		ret |= max17261_write_word(conf, MAX17261_DesignCap, conf->DesignCap);
-		ret |= max17261_write_word(conf, MAX17261_DesignCap, conf->IchgTerm);
-		ret |= max17261_write_word(conf, MAX17261_DesignCap, conf->VEmpty);
+		ret |= max17261_write_word(conf, MAX17261_IChgTerm, conf->IchgTerm);
+		ret |= max17261_write_word(conf, MAX17261_VEmpty, conf->VEmpty);
 
 		if (conf->ChargeVoltage > 4.275)
 			ret |= max17261_write_word(conf, MAX17261_ModelCFG,

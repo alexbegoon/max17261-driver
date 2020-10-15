@@ -55,6 +55,8 @@
 #define	MAX17261_TimeToEmpty	(0x11) //How long before battery is empty (in ms). Refer to page 24 and 13 of AN6358
 #define	MAX17261_VCell  		(0x09) //VCell reports the voltage measured between BATT and CSP.
 #define MAX17261_TTE			(0x11)
+#define MAX17261_IChgTerm		(0x1E)
+#define MAX17261_VEmpty			(0x3A)
 
 //#define MAX17261_BIT_Tsel	(1)
 //#define MAX17261_BIT_SS		(0)
