@@ -23,42 +23,42 @@
 
 #include <stdint.h>
 
-#define MAX17261_ADDRESS			0x6C
-#define	MAX17261_RB_THRESHOLD		3
-#define R_SENSE 					0.01
+#define MAX17261_ADDRESS			(0x6C)
+#define	MAX17261_RB_THRESHOLD		(3)
+#define R_SENSE 					(0.01)
 
-#define CAPACITY_MULTIPLIER				(5e-3)/R_SENSE
-#define CURRENT_MULTIPLIER  			(1.5625e-3)/R_SENSE
-#define CURRENT_MULTIPLIER_MINMAX 	 	0.4/R_SENSE
-#define VOLTAGE_MULTIPLIER_V  			7.8125e-2 //refer to row "Voltage"
-#define TIME_MULTIPLIER_MIN  			5.625/60.0 //Least Significant Bit= 5.625 seconds, 60 converts it to minutes.
+#define CAPACITY_MULTIPLIER				((5e-3) / R_SENSE)
+#define CURRENT_MULTIPLIER  			((1.5625e-3) / R_SENSE)
+#define CURRENT_MULTIPLIER_MINMAX 	 	(0.4 / R_SENSE)
+#define VOLTAGE_MULTIPLIER_V  			(7.8125e-2) //refer to row "Voltage"
+#define TIME_MULTIPLIER_MIN  			(5.625 / 60.0) //Least Significant Bit= 5.625 seconds, 60 converts it to minutes.
 
-#define	MAX17261_AvgCurrent 	0x0B //The AvgCurrent register reports an average of Current register readings
-#define	MAX17261_AvgVCell  		0x19 //The AvgVCell register reports an average of the VCell register readings.
-#define	MAX17261_AvgTA  		0x16
-#define MAX17261_Config			0x1D
-#define MAX17261_Config2		0xBB
-#define	MAX17261_Current  		0x0A //Voltage between the CSP and CSN pins, and would need to convert to current
-#define	MAX17261_DesignCap  	0x18 //Capacity of battery inserted, not typically used for user requested capacity
-#define MAX17261_DieTemp		0x34
-#define MAX17261_FStat			0x3D
-#define MAX17261_HibCfg			0xBA
-#define MAX17261_MaxMinVolt		0x1B
-#define MAX17261_MaxMinCurr		0x1C
-#define MAX17261_MaxMinTemp		0x1A
-#define MAX17261_ModelCFG		0xDB
-#define	MAX17261_RepCAP  		0x05 //Reported Capacity. Refer to page 23 and 13 of AN6358.
-#define	MAX17261_RepSOC  		0x06 //The Reported State of Charge of connected battery. Refer to AN6358 page 23 and 13
-#define MAX17261_SoftWakeup		0x60
-#define	MAX17261_Status			0x00 //Maintains all flags related to alert thresholds and battery insertion or removal.
-#define	MAX17261_Temp			0x08
-#define	MAX17261_TimeToEmpty	0x11 //How long before battery is empty (in ms). Refer to page 24 and 13 of AN6358
-#define	MAX17261_VCell  		0x09 //VCell reports the voltage measured between BATT and CSP.
-#define MAX17261_TTE			0x11
+#define	MAX17261_AvgCurrent 	(0x0B) //The AvgCurrent register reports an average of Current register readings
+#define	MAX17261_AvgVCell  		(0x19) //The AvgVCell register reports an average of the VCell register readings.
+#define	MAX17261_AvgTA  		(0x16)
+#define MAX17261_Config			(0x1D)
+#define MAX17261_Config2		(0xBB)
+#define	MAX17261_Current  		(0x0A) //Voltage between the CSP and CSN pins, and would need to convert to current
+#define	MAX17261_DesignCap  	(0x18) //Capacity of battery inserted, not typically used for user requested capacity
+#define MAX17261_DieTemp		(0x34)
+#define MAX17261_FStat			(0x3D)
+#define MAX17261_HibCfg			(0xBA)
+#define MAX17261_MaxMinVolt		(0x1B)
+#define MAX17261_MaxMinCurr		(0x1C)
+#define MAX17261_MaxMinTemp		(0x1A)
+#define MAX17261_ModelCFG		(0xDB)
+#define	MAX17261_RepCAP  		(0x05) //Reported Capacity. Refer to page 23 and 13 of AN6358.
+#define	MAX17261_RepSOC  		(0x06) //The Reported State of Charge of connected battery. Refer to AN6358 page 23 and 13
+#define MAX17261_SoftWakeup		(0x60)
+#define	MAX17261_Status			(0x00) //Maintains all flags related to alert thresholds and battery insertion or removal.
+#define	MAX17261_Temp			(0x08)
+#define	MAX17261_TimeToEmpty	(0x11) //How long before battery is empty (in ms). Refer to page 24 and 13 of AN6358
+#define	MAX17261_VCell  		(0x09) //VCell reports the voltage measured between BATT and CSP.
+#define MAX17261_TTE			(0x11)
 
-//#define MAX17261_BIT_Tsel	1
-//#define MAX17261_BIT_SS		0
-//#define MAX17261_BIT_ETHERM	1
+//#define MAX17261_BIT_Tsel	(1)
+//#define MAX17261_BIT_SS		(0)
+//#define MAX17261_BIT_ETHERM	(1)
 //
 //#define MAX17261_Config_Val (MAX17261_BIT_Tsel << 15) |(MAX17261_BIT_SS << 14) | (MAX17261_BIT_ETHERM << 5)
 
