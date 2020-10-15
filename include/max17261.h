@@ -80,6 +80,7 @@ struct max17261_conf {
 	uint16_t IchgTerm;
 	uint16_t VEmpty;
 	uint16_t ChargeVoltage; // charge voltage in millivolts
+	uint8_t	 force_init;
 };
 
 uint8_t
