@@ -87,13 +87,21 @@ max17261_get_reported_capacity(struct max17261_conf *conf)
 {
 	uint16_t value;
 	max17261_read_word(conf, MAX17261_RepCAP, &value);
-	return value;
+	return value * CAPACITY_MULTIPLIER;
+}
+
+uint16_t
+max17261_get_full_reported_capacity(struct max17261_conf *conf)
+{
+	uint16_t value;
+	max17261_read_word(conf, MAX17261_FullRepCAP, &value);
+	return value * CAPACITY_MULTIPLIER;
 }
 
 void
 max17261_set_design_capacity(struct max17261_conf *conf, uint16_t capacity)
 {
-	max17261_write_word(conf, MAX17261_DesignCap, capacity);
+	max17261_write_word(conf, MAX17261_DesignCap, capacity / CAPACITY_MULTIPLIER);
 }
 
 uint16_t
@@ -101,7 +109,7 @@ max17261_get_design_capacity(struct max17261_conf *conf)
 {
 	uint16_t value;
 	max17261_read_word(conf, MAX17261_DesignCap, &value);
-	return value;
+	return value * CAPACITY_MULTIPLIER;
 }
 
 uint16_t

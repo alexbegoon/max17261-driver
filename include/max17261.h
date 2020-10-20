@@ -47,7 +47,8 @@
 #define MAX17261_MaxMinCurr		(0x1C)
 #define MAX17261_MaxMinTemp		(0x1A)
 #define MAX17261_ModelCFG		(0xDB)
-#define	MAX17261_RepCAP  		(0x05) //Reported Capacity. Refer to page 23 and 13 of AN6358.
+#define	MAX17261_RepCAP  		(0x05) //Reported Capacity. Refer to page 23 and 13 of AN6358
+#define	MAX17261_FullRepCAP  	(0x10) //Reported Full Capacity
 #define	MAX17261_RepSOC  		(0x06) //The Reported State of Charge of connected battery. Refer to AN6358 page 23 and 13
 #define MAX17261_SoftWakeup		(0x60)
 #define	MAX17261_Status			(0x00) //Maintains all flags related to alert thresholds and battery insertion or removal.
