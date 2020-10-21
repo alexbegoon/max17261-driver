@@ -28,7 +28,7 @@ max17261_init(struct max17261_conf *conf)
 
 	// check for power on reset
 	ret = max17261_read_word(conf, MAX17261_Status, &value);
-	if (((value & 0x0002) != 0 && ret == 0) | conf->force_init) {
+	if (((value & 0x0002) != 0 && ret == 0) | (conf->force_init && ret == 0)) {
 		// Delay until FSTAT.DNR bit == 0
 		ret |= max17261_read_word(conf, MAX17261_FStat, &value);
 		while (value & 1) {
