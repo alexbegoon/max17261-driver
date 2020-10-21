@@ -62,14 +62,13 @@ max17261_init(struct max17261_conf *conf)
 		}
 		max17261_set_full_reported_capacity(conf, conf->DesignCap);
 		max17261_set_reported_capacity(conf, conf->DesignCap);
-
+		ret |= max17261_write_word(conf, MAX17261_Config, 0xA210);
 		ret |= max17261_write_word(conf, MAX17261_HibCfg,
 		                           conf->HibCFG) ;   // Restore Original HibCFG value
 		// Initialization complete
 		ret |= max17261_read_word(conf, MAX17261_Status, &value); //Read Status
 		ret |= max17261_write_verify(conf, MAX17261_Status, value
 		                             && 0xFFFD); //Write and Verify Status with POR bit Cleared
-		ret |= max17261_write_word(conf, MAX17261_Config, 0xA218);
 	}
 
 	return ret;
@@ -227,8 +226,14 @@ max17261_get_minmax_temperature(struct max17261_conf *conf, int8_t *min,
 {
 	uint16_t value;
 	max17261_read_word(conf, MAX17261_MaxMinTemp, &value);
-	*min = (value & 0xFF) * CURRENT_MULTIPLIER_MINMAX;
-	*max = ((value >> 8) & 0xFF) * CURRENT_MULTIPLIER_MINMAX;
+	*min = (value & 0xFF);
+	*max = ((value >> 8) & 0xFF);
+}
+
+void
+max17261_reset_minmax_temperature(struct max17261_conf *conf)
+{
+	max17261_write_word(conf, MAX17261_MaxMinTemp,  0x807F);
 }
 
 uint16_t

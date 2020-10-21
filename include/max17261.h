@@ -124,6 +124,11 @@ max17261_get_minmax_current(struct max17261_conf *conf, int16_t *min,
                             int16_t *max);
 int8_t
 max17261_get_temperature(struct max17261_conf *conf);
+void
+max17261_get_minmax_temperature(struct max17261_conf *conf, int8_t *min,
+                                int8_t *max);
+void
+max17261_reset_minmax_temperature(struct max17261_conf *conf);
 int8_t
 max17261_get_average_temperature(struct max17261_conf *conf);
 int8_t
