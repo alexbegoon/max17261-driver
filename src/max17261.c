@@ -24,7 +24,7 @@ uint8_t
 max17261_init(struct max17261_conf *conf)
 {
 	uint8_t ret = 0;
-	uint16_t value;
+	uint16_t value, model_cfg = 0x8000;
 
 	// check for power on reset
 	ret = max17261_read_word(conf, MAX17261_Status, &value);
@@ -49,12 +49,11 @@ max17261_init(struct max17261_conf *conf)
 		ret |= max17261_write_word(conf, MAX17261_IChgTerm, conf->IchgTerm * 6.4);
 		ret |= max17261_write_word(conf, MAX17261_VEmpty, conf->VEmpty);
 
-		if (conf->ChargeVoltage > 4.275)
-			ret |= max17261_write_word(conf, MAX17261_ModelCFG,
-			                           0x8400) ;   // Write ModelCFG
-		else
-			ret |= max17261_write_word(conf, MAX17261_ModelCFG,
-			                           0x8000) ;   // Write ModelCFG
+		model_cfg |= (conf->ChargeVoltage > 4.275) << 10;
+		model_cfg |= (conf->R100 & 1) << 13;
+		// Write ModelCFG
+		ret |= max17261_write_word(conf, MAX17261_ModelCFG,
+		                           model_cfg) ;
 		//Poll ModelCFG.Refresh(highest bit),
 		ret |= max17261_read_word(conf, 0xDB, &value);
 		while (value & 0x8000) { //do not continue until ModelCFG.Refresh==0
@@ -99,7 +98,8 @@ max17261_get_reported_capacity(struct max17261_conf *conf)
 }
 
 void
-max17261_set_full_reported_capacity(struct max17261_conf *conf, uint16_t capacity)
+max17261_set_full_reported_capacity(struct max17261_conf *conf,
+                                    uint16_t capacity)
 {
 	max17261_write_word(conf, MAX17261_FullRepCAP, capacity / CAPACITY_MULTIPLIER);
 }

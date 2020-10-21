@@ -77,11 +77,12 @@ struct max17261_conf {
 	max17261_delay delay_ms;
 #endif
 	uint16_t HibCFG;
-	uint16_t DesignCap;
-	uint16_t IchgTerm;
-	uint16_t VEmpty;
-	uint16_t ChargeVoltage; // charge voltage in millivolts
-	uint8_t	 force_init;
+	uint16_t DesignCap;		//!< Design capacity in mAh
+	uint16_t IchgTerm;		//!< Charge termination current in mA
+	uint16_t VEmpty;		//!< Empty voltage values
+	uint16_t ChargeVoltage; //!< Charge voltage in mV
+	uint8_t	 force_init;	//!< Force initialization
+	uint8_t	 R100;			//!< Thermistor value setting. 0 = 10k, 1 = 100k
 };
 
 uint8_t
@@ -106,7 +107,8 @@ max17261_set_reported_capacity(struct max17261_conf *conf, uint16_t capacity);
 uint16_t
 max17261_get_reported_capacity(struct max17261_conf *conf);
 void
-max17261_set_full_reported_capacity(struct max17261_conf *conf, uint16_t capacity);
+max17261_set_full_reported_capacity(struct max17261_conf *conf,
+                                    uint16_t capacity);
 uint16_t
 max17261_get_full_reported_capacity(struct max17261_conf *conf);
 uint16_t
