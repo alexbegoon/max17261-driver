@@ -45,8 +45,8 @@ max17261_init(struct max17261_conf *conf)
 		ret |= max17261_write_word(conf, MAX17261_SoftWakeup,
 		                           0x0); // Exit Hibernate Mode step 3
 
-		ret |= max17261_write_word(conf, MAX17261_DesignCap, conf->DesignCap);
-		ret |= max17261_write_word(conf, MAX17261_IChgTerm, conf->IchgTerm);
+		ret |= max17261_write_word(conf, MAX17261_DesignCap, conf->DesignCap * 2);
+		ret |= max17261_write_word(conf, MAX17261_IChgTerm, conf->IchgTerm * 6.4);
 		ret |= max17261_write_word(conf, MAX17261_VEmpty, conf->VEmpty);
 
 		if (conf->ChargeVoltage > 4.275)
@@ -61,6 +61,8 @@ max17261_init(struct max17261_conf *conf)
 			max17261_delay_ms(conf, 10);
 			ret |= max17261_read_word(conf, MAX17261_ModelCFG, &value);
 		}
+		max17261_set_full_reported_capacity(conf, conf->DesignCap);
+		max17261_set_reported_capacity(conf, conf->DesignCap);
 
 		ret |= max17261_write_word(conf, MAX17261_HibCfg,
 		                           conf->HibCFG) ;   // Restore Original HibCFG value
@@ -68,7 +70,7 @@ max17261_init(struct max17261_conf *conf)
 		ret |= max17261_read_word(conf, MAX17261_Status, &value); //Read Status
 		ret |= max17261_write_verify(conf, MAX17261_Status, value
 		                             && 0xFFFD); //Write and Verify Status with POR bit Cleared
-		ret |= max17261_write_word(conf, MAX17261_Config, 0x2210);
+		ret |= max17261_write_word(conf, MAX17261_Config, 0xA218);
 	}
 
 	return ret;
@@ -82,12 +84,24 @@ max17261_get_SOC(struct max17261_conf *conf)
 	return (uint8_t)(value >> 8);
 }
 
+void
+max17261_set_reported_capacity(struct max17261_conf *conf, uint16_t capacity)
+{
+	max17261_write_word(conf, MAX17261_RepCAP, capacity / CAPACITY_MULTIPLIER);
+}
+
 uint16_t
 max17261_get_reported_capacity(struct max17261_conf *conf)
 {
 	uint16_t value;
 	max17261_read_word(conf, MAX17261_RepCAP, &value);
 	return value * CAPACITY_MULTIPLIER;
+}
+
+void
+max17261_set_full_reported_capacity(struct max17261_conf *conf, uint16_t capacity)
+{
+	max17261_write_word(conf, MAX17261_FullRepCAP, capacity / CAPACITY_MULTIPLIER);
 }
 
 uint16_t
@@ -131,6 +145,12 @@ max17261_get_average_voltage(struct max17261_conf *conf)
 }
 
 void
+max17261_reset_minmax_voltage(struct max17261_conf *conf)
+{
+	max17261_write_word(conf, MAX17261_MaxMinVolt, 0x00FF);
+}
+
+void
 max17261_get_minmax_voltage(struct max17261_conf *conf, uint16_t *min,
                             uint16_t *max)
 {
@@ -156,6 +176,12 @@ max17261_get_average_current(struct max17261_conf *conf)
 	max17261_read_word(conf, MAX17261_AvgCurrent, (uint16_t *) &value);
 	value = value * CURRENT_MULTIPLIER;
 	return value;
+}
+
+void
+max17261_reset_minmax_current(struct max17261_conf *conf)
+{
+	max17261_write_word(conf, MAX17261_MaxMinCurr, 0x00FF);
 }
 
 void

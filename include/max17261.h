@@ -97,14 +97,26 @@ max17261_get_current(struct max17261_conf *conf);
 uint8_t
 max17261_get_SOC(struct max17261_conf *conf);
 void
+max17261_reset_minmax_voltage(struct max17261_conf *conf);
+void
 max17261_get_minmax_voltage(struct max17261_conf *conf, uint16_t *min,
                             uint16_t *max);
+void
+max17261_set_reported_capacity(struct max17261_conf *conf, uint16_t capacity);
+uint16_t
+max17261_get_reported_capacity(struct max17261_conf *conf);
+void
+max17261_set_full_reported_capacity(struct max17261_conf *conf, uint16_t capacity);
+uint16_t
+max17261_get_full_reported_capacity(struct max17261_conf *conf);
 uint16_t
 max17261_get_design_capacity(struct max17261_conf *conf);
 void
 max17261_set_design_capacity(struct max17261_conf *conf, uint16_t capacity);
 int16_t
 max17261_get_average_current(struct max17261_conf *conf);
+void
+max17261_reset_minmax_current(struct max17261_conf *conf);
 void
 max17261_get_minmax_current(struct max17261_conf *conf, int16_t *min,
                             int16_t *max);
