@@ -1,0 +1,36 @@
+variables:
+  GITLAB_CI_IMAGE_GCC: 'gcc:10.2'
+  GITLAB_CI_IMAGE_ALPINE: 'alpine:3.12'
+  GIT_SUBMODULE_STRATEGY: recursive
+
+stages:
+  - style
+  - build
+
+# 'style' stage
+style:
+  stage: style
+  needs: []
+  image: ${GITLAB_CI_IMAGE_GCC}
+  before_script:
+    - apt-get -q update
+    - apt-get -qy install astyle
+  script:
+    - 'astyle --dry-run --options=.astylerc --formatted include/*.h src/*.c | sed ''s/^Formatted/ERROR: Unformatted/;T;q1'''
+
+# 'build' stage
+build:
+  stage: build
+  needs: []
+  image: ${GITLAB_CI_IMAGE_GCC}
+  before_script:
+    - apt -q update
+    - apt -qy install cmake make autoconf gcc-arm-none-eabi
+  script:
+    - cmake .
+    - make
+  artifacts:
+    expire_in: 1 week
+    when: always
+    paths:
+      - "*.so"
