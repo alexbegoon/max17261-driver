@@ -73,7 +73,6 @@ struct max17261_conf {
 #ifndef MAX17261_USE_WEAK
 	max17261_read read;
 	max17261_write write;
-	max17261_write write_verify;
 	max17261_delay delay_ms;
 #endif
 	uint16_t HibCFG;

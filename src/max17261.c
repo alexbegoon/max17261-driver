@@ -288,14 +288,23 @@ max17261_write_word(struct max17261_conf *conf, uint8_t reg, uint16_t value)
  * @param value Value to write
  * @return 0 on success error code otherwise
  */
-__attribute__((weak)) uint8_t
+uint8_t
 max17261_write_verify(struct max17261_conf *conf, uint8_t reg, uint16_t value)
 {
-#ifndef MAX17261_USE_WEAK
-	return conf->write_verify(reg, value);
+	uint8_t wcount = 0, ret;
+	uint16_t readback;
+	do {
+		if ((ret = max17261_write_word(conf, reg, value)) != 0)
+			return ret;
+#ifdef MAX17261_USE_WEAK
+		max17261_delay_ms(conf, 1);
 #else
-	return 0;
+		conf->delay_ms(1);
 #endif
+		if ((ret = max17261_read_word(conf, reg, &readback)) != 0)
+			return ret;
+	} while (readback != value && ++wcount < MAX17261_RB_THRESHOLD);
+	return ((readback == value) ? 0 : 0x04);
 }
 
 /**
