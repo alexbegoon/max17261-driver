@@ -71,9 +71,12 @@ typedef uint8_t (*max17261_delay)(uint32_t period);
 
 struct max17261_conf {
 #ifndef MAX17261_USE_WEAK
+#pragma message "Building using function pointers"
 	max17261_read read;
 	max17261_write write;
 	max17261_delay delay_ms;
+#else
+#pragma message("Building using weak functions")
 #endif
 	uint16_t HibCFG;
 	uint16_t DesignCap;		//!< Design capacity in mAh
