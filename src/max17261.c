@@ -18,69 +18,97 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+
+#include <stdint.h>
+
 #include "../include/max17261.h"
 
-uint8_t
+max17261_err_t
 max17261_init(struct max17261_conf *conf)
 {
-	uint8_t ret = 0;
+	max17261_err_t ret;
 	uint16_t value, model_cfg = 0x8000;
 
 	// check for power on reset
 	ret = max17261_read_word(conf, MAX17261_Status, &value);
 	if (((value & 0x0002) || (conf->force_init)) && ret == 0) {
 		// Delay until FSTAT.DNR bit == 0
-		ret |= max17261_read_word(conf, MAX17261_FStat, &value);
-		while (value & 1) {
-			max17261_delay_ms(conf, 10);
-			ret |= max17261_read_word(conf, MAX17261_FStat, &value);
-		}
-		// Initialize Configuration
-		ret |= max17261_read_word(conf, MAX17261_HibCfg,
-		                          &conf->HibCFG); //Store original HibCFG value
-		ret |= max17261_write_word(conf, MAX17261_SoftWakeup,
-		                           0x90); // Exit Hibernate Mode step 1
-		ret |= max17261_write_word(conf, MAX17261_HibCfg,
-		                           0x0); // Exit Hibernate Mode step 2
-		ret |= max17261_write_word(conf, MAX17261_SoftWakeup,
-		                           0x0); // Exit Hibernate Mode step 3
+		// TODO: Do we need a safety timeout here?
+		do {
+			ret = max17261_read_word(conf, MAX17261_FStat, &value);
+		} while (ret || (value & 1));
 
-		ret |= max17261_write_word(conf, MAX17261_DesignCap, conf->DesignCap * 2);
-		ret |= max17261_write_word(conf, MAX17261_IChgTerm, conf->IchgTerm * 6.4);
-		ret |= max17261_write_word(conf, MAX17261_VEmpty, conf->VEmpty);
+		// Initialize Configuration
+		ret = max17261_read_word(conf, MAX17261_HibCfg,
+					 &conf->HibCFG); //Store original HibCFG value
+		if (!ret)
+			ret = max17261_write_word(conf, MAX17261_SoftWakeup,
+						  0x90); // Exit Hibernate Mode step 1
+		if (!ret)
+			ret = max17261_write_word(conf, MAX17261_HibCfg,
+						  0x0); // Exit Hibernate Mode step 2
+		if (!ret)
+			ret = max17261_write_word(conf, MAX17261_SoftWakeup,
+						  0x0); // Exit Hibernate Mode step 3
+
+		if (!ret)
+			ret = max17261_write_word(conf, MAX17261_DesignCap, conf->DesignCap * 2);
+		if (!ret)
+			ret = max17261_write_word(conf, MAX17261_IChgTerm, conf->IchgTerm * 6.4);
+		if (!ret)
+			ret = max17261_write_word(conf, MAX17261_VEmpty, conf->VEmpty);
+
+		if (ret)
+			return ret;
 
 		model_cfg |= (conf->ChargeVoltage > 4.275) << 10;
 		model_cfg |= (conf->R100 & 1) << 13;
-		// Write ModelCFG
-		ret |= max17261_write_word(conf, MAX17261_ModelCFG,
-		                           model_cfg) ;
-		//Poll ModelCFG.Refresh(highest bit),
-		ret |= max17261_read_word(conf, 0xDB, &value);
-		while (value & 0x8000) { //do not continue until ModelCFG.Refresh==0
-			max17261_delay_ms(conf, 10);
-			ret |= max17261_read_word(conf, MAX17261_ModelCFG, &value);
-		}
 
-		ret |= max17261_write_word(conf, MAX17261_Config, 0xA210);
+		// Write ModelCFG
+		ret = max17261_write_word(conf, MAX17261_ModelCFG, model_cfg);
+		if (ret)
+			return ret;
+
+		// Poll ModelCFG.Refresh(highest bit),
+		// TODO: Do we need a safety timeout here?
+		do {
+			ret = max17261_read_word(conf, MAX17261_ModelCFG, &value);
+			// do not continue until ModelCFG.Refresh==0
+		} while (ret || (value & 0x8000));
+
+		ret = max17261_write_word(conf, MAX17261_Config, 0xA210);
 		// Init option 2
 		if (conf->init_option == 2) {
-			ret |= max17261_write_verify(conf, MAX17261_RComp0, conf->lparams.RCOMP0);
-			ret |= max17261_write_verify(conf, MAX17261_TempCo, conf->lparams.TempCo);
-			ret |= max17261_write_verify(conf, MAX17261_QRTable00,
-			                             conf->lparams.QRTable[0]);
-			ret |= max17261_write_verify(conf, MAX17261_QRTable10,
-			                             conf->lparams.QRTable[1]);
-			ret |= max17261_write_verify(conf, MAX17261_QRTable20,
-			                             conf->lparams.QRTable[2]);
-			ret |= max17261_write_verify(conf, MAX17261_QRTable30,
-			                             conf->lparams.QRTable[3]);
+			if (!ret)
+				ret = max17261_write_verify(conf, MAX17261_RComp0,
+							    conf->lparams.RCOMP0);
+			if (!ret)
+				ret = max17261_write_verify(conf, MAX17261_TempCo,
+							    conf->lparams.TempCo);
+			if (!ret)
+				ret = max17261_write_verify(conf, MAX17261_QRTable00,
+							    conf->lparams.QRTable[0]);
+			if (!ret)
+				ret = max17261_write_verify(conf, MAX17261_QRTable10,
+							    conf->lparams.QRTable[1]);
+			if (!ret)
+				ret = max17261_write_verify(conf, MAX17261_QRTable20,
+							    conf->lparams.QRTable[2]);
+			if (!ret)
+				ret = max17261_write_verify(conf, MAX17261_QRTable30,
+							    conf->lparams.QRTable[3]);
 		}
-		ret |= max17261_write_word(conf, MAX17261_HibCfg,
-		                           conf->HibCFG) ;   // Restore Original HibCFG value
+
+		// Restore Original HibCFG value
+		if (!ret)
+			ret = max17261_write_word(conf, MAX17261_HibCfg, conf->HibCFG);
 		// Initialization complete
-		ret |= max17261_read_word(conf, MAX17261_Status, &value); //Read Status
-		ret |= max17261_write_verify(conf, MAX17261_Status, value
-		                             && 0xFFFD); //Write and Verify Status with POR bit Cleared
+		if (!ret)
+			ret = max17261_read_word(conf, MAX17261_Status, &value); // Read Status
+		// Write and Verify Status with POR bit Cleared
+		if (!ret)
+			ret = max17261_write_verify(conf, MAX17261_Status, value
+						    && 0xFFFD);
 	}
 
 	return ret;
@@ -94,10 +122,10 @@ max17261_get_SOC(struct max17261_conf *conf)
 	return (uint8_t)(value >> 8);
 }
 
-void
+max17261_err_t
 max17261_set_reported_capacity(struct max17261_conf *conf, uint16_t capacity)
 {
-	max17261_write_word(conf, MAX17261_RepCAP, capacity / CAPACITY_MULTIPLIER);
+	return max17261_write_word(conf, MAX17261_RepCAP, capacity / CAPACITY_MULTIPLIER);
 }
 
 uint16_t
@@ -108,11 +136,11 @@ max17261_get_reported_capacity(struct max17261_conf *conf)
 	return value * CAPACITY_MULTIPLIER;
 }
 
-void
+max17261_err_t
 max17261_set_full_reported_capacity(struct max17261_conf *conf,
                                     uint16_t capacity)
 {
-	max17261_write_word(conf, MAX17261_FullRepCAP, capacity / CAPACITY_MULTIPLIER);
+	return max17261_write_word(conf, MAX17261_FullRepCAP, capacity / CAPACITY_MULTIPLIER);
 }
 
 uint16_t
@@ -123,10 +151,10 @@ max17261_get_full_reported_capacity(struct max17261_conf *conf)
 	return value * CAPACITY_MULTIPLIER;
 }
 
-void
+max17261_err_t
 max17261_set_design_capacity(struct max17261_conf *conf, uint16_t capacity)
 {
-	max17261_write_word(conf, MAX17261_DesignCap, capacity / CAPACITY_MULTIPLIER);
+	return max17261_write_word(conf, MAX17261_DesignCap, capacity / CAPACITY_MULTIPLIER);
 }
 
 uint16_t
@@ -155,20 +183,25 @@ max17261_get_average_voltage(struct max17261_conf *conf)
 	return value;
 }
 
-void
+max17261_err_t
 max17261_reset_minmax_voltage(struct max17261_conf *conf)
 {
-	max17261_write_word(conf, MAX17261_MaxMinVolt, 0x00FF);
+	return max17261_write_word(conf, MAX17261_MaxMinVolt, 0x00FF);
 }
 
-void
+max17261_err_t
 max17261_get_minmax_voltage(struct max17261_conf *conf, uint16_t *min,
                             uint16_t *max)
 {
 	uint16_t value;
-	max17261_read_word(conf, MAX17261_MaxMinVolt, &value);
-	*min = (value & 0xFF) * 20;
-	*max = ((value >> 8) & 0xFF) * 20;
+	max17261_err_t ret = max17261_read_word(conf, MAX17261_MaxMinVolt, &value);
+
+	if (!ret) {
+		*min = (value & 0xFF) * 20;
+		*max = ((value >> 8) & 0xFF) * 20;
+	}
+
+	return ret;
 }
 
 int16_t
@@ -189,108 +222,148 @@ max17261_get_average_current(struct max17261_conf *conf)
 	return value;
 }
 
-void
+max17261_err_t
 max17261_reset_minmax_current(struct max17261_conf *conf)
 {
-	max17261_write_word(conf, MAX17261_MaxMinCurr, 0x00FF);
+	return max17261_write_word(conf, MAX17261_MaxMinCurr, 0x00FF);
 }
 
-void
+max17261_err_t
 max17261_get_minmax_current(struct max17261_conf *conf, int16_t *min,
                             int16_t *max)
 {
 	uint16_t value;
-	max17261_read_word(conf, MAX17261_MaxMinCurr, &value);
-	*min = ((int8_t)(value & 0xFF)) * CURRENT_MULTIPLIER_MINMAX;
-	*max = ((int8_t)(value >> 8)) * CURRENT_MULTIPLIER_MINMAX;
+	max17261_err_t ret = max17261_read_word(conf, MAX17261_MaxMinCurr, &value);
+
+	if (!ret) {
+		*min = ((int8_t)(value & 0xFF)) * CURRENT_MULTIPLIER_MINMAX;
+		*max = ((int8_t)(value >> 8)) * CURRENT_MULTIPLIER_MINMAX;
+	}
+
+	return ret;
 }
 
-int8_t
+max17261_err_t
 max17261_get_die_temperature(struct max17261_conf *conf)
 {
-	int16_t value;
-	max17261_read_word(conf, MAX17261_DieTemp, (uint16_t *) &value);
-	value >>= 8;
-	return value;
+	uint16_t value;
+	max17261_err_t ret = max17261_read_word(conf, MAX17261_DieTemp, &value);
+
+	if (ret)
+		return ret;
+
+	return value >> 8;
 }
 
-int8_t
+max17261_err_t
 max17261_get_temperature(struct max17261_conf *conf)
 {
-	int16_t value;
-	max17261_read_word(conf, MAX17261_Temp, (uint16_t *) &value);
-	value >>= 8;
-	return value;
+	uint16_t value;
+	max17261_err_t ret = max17261_read_word(conf, MAX17261_Temp, &value);
+
+	if (ret)
+		return ret;
+
+	return value >> 8;
 }
 
-int8_t
+max17261_err_t
 max17261_get_average_temperature(struct max17261_conf *conf)
 {
-	int16_t value;
-	max17261_read_word(conf, MAX17261_AvgTA, (uint16_t *) &value);
-	value >>= 8;
-	return value;
+	uint16_t value;
+	max17261_err_t ret = max17261_read_word(conf, MAX17261_AvgTA, &value);
+
+	if (ret)
+		return ret;
+
+	return value >> 8;
 }
 
-void
+max17261_err_t
 max17261_get_minmax_temperature(struct max17261_conf *conf, int8_t *min,
                                 int8_t *max)
 {
 	uint16_t value;
-	max17261_read_word(conf, MAX17261_MaxMinTemp, &value);
-	*min = (value & 0xFF);
-	*max = ((value >> 8) & 0xFF);
+	max17261_err_t ret = max17261_read_word(conf, MAX17261_MaxMinTemp, &value);
+	if (!ret) {
+		*min = value & 0xFF;
+		*max = (value >> 8) & 0xFF;
+	}
+
+	return ret;
 }
 
-void
+max17261_err_t
 max17261_reset_minmax_temperature(struct max17261_conf *conf)
 {
-	max17261_write_word(conf, MAX17261_MaxMinTemp,  0x807F);
+	return max17261_write_word(conf, MAX17261_MaxMinTemp,  0x807F);
 }
 
 uint16_t
 max17261_get_TTE(struct max17261_conf *conf)
 {
 	uint16_t value;
-	max17261_read_word(conf, MAX17261_TTE, &value);
-	return value * TIME_MULTIPLIER_MIN;
+	uint8_t ret = max17261_read_word(conf, MAX17261_TTE, &value);
+	return ret ? 0 : value * TIME_MULTIPLIER_MIN;
 }
 
-void
+max17261_err_t
 max17261_get_learned_params(struct max17261_conf *conf)
 {
-	max17261_read_word(conf, MAX17261_FullCapNom, &conf->lparams.FullCapNom);
-	max17261_read_word(conf, MAX17261_FullRepCAP, &conf->lparams.FullCapRep);
-	max17261_read_word(conf, MAX17261_RComp0, &conf->lparams.RCOMP0);
-	max17261_read_word(conf, MAX17261_TempCo, &conf->lparams.TempCo);
-	max17261_read_word(conf, MAX17261_Cycles, &conf->lparams.cycles);
+	max17261_err_t ret;
+
+	ret = max17261_read_word(conf, MAX17261_FullCapNom, &conf->lparams.FullCapNom);
+	if (!ret)
+		ret = max17261_read_word(conf, MAX17261_FullRepCAP, &conf->lparams.FullCapRep);
+	if (!ret)
+		ret = max17261_read_word(conf, MAX17261_RComp0, &conf->lparams.RCOMP0);
+	if (!ret)
+		ret = max17261_read_word(conf, MAX17261_TempCo, &conf->lparams.TempCo);
+	if (!ret)
+		ret = max17261_read_word(conf, MAX17261_Cycles, &conf->lparams.cycles);
+
+	return ret;
 }
 
-void
+max17261_err_t
 max17261_restore_learned_params(struct max17261_conf *conf)
 {
-	uint8_t ret = 0;
+	max17261_err_t ret;
 
-	ret |= max17261_write_verify(conf, MAX17261_RComp0, conf->lparams.RCOMP0);
-	ret |= max17261_write_verify(conf, MAX17261_TempCo, conf->lparams.TempCo);
-	ret |= max17261_write_verify(conf, MAX17261_FullRepCAP,
-	                             conf->lparams.FullCapRep);
-	ret |= max17261_write_verify(conf, MAX17261_FullCapNom,
-	                             conf->lparams.FullCapNom);
-	ret |= max17261_write_verify(conf, MAX17261_dPAcc, 0x0C80);
-	ret |= max17261_write_verify(conf, MAX17261_dQAcc,
-	                             conf->lparams.FullCapNom * 2);
-	ret |= max17261_write_verify(conf, MAX17261_Cycles, conf->lparams.cycles);
+	ret = max17261_write_verify(conf, MAX17261_RComp0, conf->lparams.RCOMP0);
+	if (!ret)
+		ret = max17261_write_verify(conf, MAX17261_TempCo, conf->lparams.TempCo);
+	if (!ret)
+		ret = max17261_write_verify(conf, MAX17261_FullRepCAP,
+					    conf->lparams.FullCapRep);
+	if (!ret)
+		ret = max17261_write_verify(conf, MAX17261_FullCapNom,
+					    conf->lparams.FullCapNom);
+	if (!ret)
+		ret = max17261_write_verify(conf, MAX17261_dPAcc, 0x0C80);
+	if (!ret)
+		ret = max17261_write_verify(conf, MAX17261_dQAcc,
+					    conf->lparams.FullCapNom * 2);
+	if (!ret)
+		ret = max17261_write_verify(conf, MAX17261_Cycles, conf->lparams.cycles);
+
+	return ret;
 }
 
 uint8_t
 max17261_get_qrtable_values(struct max17261_conf *conf)
 {
-	uint8_t ret = 0;
-	ret |= max17261_read_word(conf, MAX17261_QRTable00, &conf->lparams.QRTable[0]);
-	ret |= max17261_read_word(conf, MAX17261_QRTable10, &conf->lparams.QRTable[1]);
-	ret |= max17261_read_word(conf, MAX17261_QRTable20, &conf->lparams.QRTable[2]);
-	ret |= max17261_read_word(conf, MAX17261_QRTable30, &conf->lparams.QRTable[3]);
+	max17261_err_t ret;
+
+	ret = max17261_read_word(conf, MAX17261_QRTable00, &conf->lparams.QRTable[0]);
+	if (!ret)
+		ret = max17261_read_word(conf, MAX17261_QRTable10, &conf->lparams.QRTable[1]);
+	if (!ret)
+		ret = max17261_read_word(conf, MAX17261_QRTable20, &conf->lparams.QRTable[2]);
+	if (!ret)
+		ret = max17261_read_word(conf, MAX17261_QRTable30, &conf->lparams.QRTable[3]);
+
+	return ret;
 }
 /**
  * @brief I2C Read function wrapper
@@ -300,7 +373,7 @@ max17261_get_qrtable_values(struct max17261_conf *conf)
  * @param value Pointer to write value
  * @return 0 on success error code otherwise
  */
-__attribute__((weak)) uint8_t
+__attribute__((weak)) max17261_err_t
 max17261_read_word(struct max17261_conf *conf, uint8_t reg, uint16_t *value)
 {
 #ifndef MAX17261_USE_WEAK
@@ -318,7 +391,7 @@ max17261_read_word(struct max17261_conf *conf, uint8_t reg, uint16_t *value)
  * @param value Value to write
  * @return 0 on success error code otherwise
  */
-__attribute__((weak)) uint8_t
+__attribute__((weak)) max17261_err_t
 max17261_write_word(struct max17261_conf *conf, uint8_t reg, uint16_t value)
 {
 #ifndef MAX17261_USE_WEAK
@@ -336,7 +409,7 @@ max17261_write_word(struct max17261_conf *conf, uint8_t reg, uint16_t value)
  * @param value Value to write
  * @return 0 on success error code otherwise
  */
-uint8_t
+max17261_err_t
 max17261_write_verify(struct max17261_conf *conf, uint8_t reg, uint16_t value)
 {
 	uint8_t wcount = 0, ret;
@@ -361,7 +434,7 @@ max17261_write_verify(struct max17261_conf *conf, uint8_t reg, uint16_t value)
  * @param period
  * @return
  */
-__attribute__((weak)) uint8_t
+__attribute__((weak)) max17261_err_t
 max17261_delay_ms(struct max17261_conf *conf, uint32_t period)
 {
 #ifndef MAX17261_USE_WEAK

@@ -79,9 +79,15 @@ extern "C" {
 //
 //#define MAX17261_Config_Val (MAX17261_BIT_Tsel << 15) |(MAX17261_BIT_SS << 14) | (MAX17261_BIT_ETHERM << 5)
 
-typedef uint8_t (*max17261_write)(uint8_t reg, uint16_t value);
-typedef uint8_t (*max17261_read)(uint8_t reg, uint16_t *value);
-typedef uint8_t (*max17261_delay)(uint32_t period);
+/*
+ * This can be removed again once both the driver and all its users are
+ * converted to use int for the error type
+ */
+typedef uint8_t max17261_err_t;
+
+typedef max17261_err_t (*max17261_write)(uint8_t reg, uint16_t value);
+typedef max17261_err_t (*max17261_read)(uint8_t reg, uint16_t *value);
+typedef max17261_err_t (*max17261_delay)(uint32_t period);
 
 struct max17261_learned_params {
 	uint16_t RCOMP0;
@@ -105,14 +111,14 @@ struct max17261_conf {
 	uint16_t DesignCap;		//!< Design capacity in mAh
 	uint16_t IchgTerm;		//!< Charge termination current in mA
 	uint16_t VEmpty;		//!< Empty voltage values
-	uint16_t ChargeVoltage; //!< Charge voltage in mV
-	uint8_t	 force_init;	//!< Force initialization
+	uint16_t ChargeVoltage;		//!< Charge voltage in mV
+	uint8_t	 force_init;		//!< Force initialization
 	uint8_t	 R100;			//!< Thermistor value setting. 0 = 10k, 1 = 100k
-	uint8_t  init_option;	//!< Choose init option type
+	uint8_t  init_option;		//!< Choose init option type
 	struct max17261_learned_params lparams;  //!< Learned parameters
 };
 
-uint8_t
+max17261_err_t
 max17261_init(struct max17261_conf *conf);
 uint16_t
 max17261_get_reported_capacity(struct max17261_conf *conf);
@@ -124,55 +130,55 @@ int16_t
 max17261_get_current(struct max17261_conf *conf);
 uint8_t
 max17261_get_SOC(struct max17261_conf *conf);
-void
+max17261_err_t
 max17261_reset_minmax_voltage(struct max17261_conf *conf);
-void
+max17261_err_t
 max17261_get_minmax_voltage(struct max17261_conf *conf, uint16_t *min,
                             uint16_t *max);
-void
+max17261_err_t
 max17261_set_reported_capacity(struct max17261_conf *conf, uint16_t capacity);
 uint16_t
 max17261_get_reported_capacity(struct max17261_conf *conf);
-void
+max17261_err_t
 max17261_set_full_reported_capacity(struct max17261_conf *conf,
                                     uint16_t capacity);
 uint16_t
 max17261_get_full_reported_capacity(struct max17261_conf *conf);
 uint16_t
 max17261_get_design_capacity(struct max17261_conf *conf);
-void
+max17261_err_t
 max17261_set_design_capacity(struct max17261_conf *conf, uint16_t capacity);
 int16_t
 max17261_get_average_current(struct max17261_conf *conf);
-void
+max17261_err_t
 max17261_reset_minmax_current(struct max17261_conf *conf);
-void
+max17261_err_t
 max17261_get_minmax_current(struct max17261_conf *conf, int16_t *min,
                             int16_t *max);
-int8_t
+max17261_err_t
 max17261_get_temperature(struct max17261_conf *conf);
-void
+max17261_err_t
 max17261_get_minmax_temperature(struct max17261_conf *conf, int8_t *min,
                                 int8_t *max);
-void
+max17261_err_t
 max17261_reset_minmax_temperature(struct max17261_conf *conf);
-int8_t
+max17261_err_t
 max17261_get_average_temperature(struct max17261_conf *conf);
-int8_t
+max17261_err_t
 max17261_get_die_temperature(struct max17261_conf *conf);
 uint16_t
 max17261_get_TTE(struct max17261_conf *conf);
-uint8_t
+max17261_err_t
 max17261_read_word(struct max17261_conf *conf, uint8_t reg, uint16_t *value);
-uint8_t
+max17261_err_t
 max17261_write_word(struct max17261_conf *conf, uint8_t reg, uint16_t value);
-uint8_t
+max17261_err_t
 max17261_write_verify(struct max17261_conf *conf, uint8_t reg, uint16_t value);
-uint8_t
+max17261_err_t
 max17261_delay_ms(struct max17261_conf *conf, uint32_t period);
-void
+max17261_err_t
 max17261_get_learned_params(struct max17261_conf *conf);
-void
+max17261_err_t
 max17261_restore_learned_params(struct max17261_conf *conf);
 uint8_t
 max17261_get_qrtable_values(struct max17261_conf *conf);
