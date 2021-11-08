@@ -58,6 +58,16 @@
 #define MAX17261_TTE			(0x11)
 #define MAX17261_IChgTerm		(0x1E)
 #define MAX17261_VEmpty			(0x3A)
+#define MAX17261_RComp0			(0x38)
+#define MAX17261_TempCo			(0x39)
+#define MAX17261_Cycles			(0x17)
+#define MAX17261_FullCapNom		(0x23) // Full discharge capacity compensated according to the present conditions
+#define MAX17261_dQAcc			(0x45) // This register tracks change in battery charge between relaxation points
+#define MAX17261_dPAcc			(0x46) // This register tracks change in battery SOC between relaxation points
+#define MAX17261_QRTable00		(0x12)
+#define MAX17261_QRTable10		(0x22)
+#define MAX17261_QRTable20		(0x32)
+#define MAX17261_QRTable30		(0x42)
 
 //#define MAX17261_BIT_Tsel	(1)
 //#define MAX17261_BIT_SS		(0)
@@ -68,6 +78,15 @@
 typedef uint8_t (*max17261_write)(uint8_t reg, uint16_t value);
 typedef uint8_t (*max17261_read)(uint8_t reg, uint16_t *value);
 typedef uint8_t (*max17261_delay)(uint32_t period);
+
+struct max17261_learned_params {
+	uint16_t RCOMP0;
+	uint16_t TempCo;
+	uint16_t FullCapRep;
+	uint16_t cycles;
+	uint16_t FullCapNom;
+	uint16_t QRTable[4];
+};
 
 struct max17261_conf {
 #ifndef MAX17261_USE_WEAK
@@ -85,6 +104,8 @@ struct max17261_conf {
 	uint16_t ChargeVoltage; //!< Charge voltage in mV
 	uint8_t	 force_init;	//!< Force initialization
 	uint8_t	 R100;			//!< Thermistor value setting. 0 = 10k, 1 = 100k
+	uint8_t  init_option;	//!< Choose init option type
+	struct max17261_learned_params lparams;  //!< Learned parameters
 };
 
 uint8_t
@@ -145,4 +166,10 @@ uint8_t
 max17261_write_verify(struct max17261_conf *conf, uint8_t reg, uint16_t value);
 uint8_t
 max17261_delay_ms(struct max17261_conf *conf, uint32_t period);
+void
+max17261_get_learned_params(struct max17261_conf *conf);
+void
+max17261_restore_learned_params(struct max17261_conf *conf);
+uint8_t
+max17261_get_qrtable_values(struct max17261_conf *conf);
 #endif

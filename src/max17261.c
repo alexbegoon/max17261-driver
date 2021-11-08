@@ -60,9 +60,21 @@ max17261_init(struct max17261_conf *conf)
 			max17261_delay_ms(conf, 10);
 			ret |= max17261_read_word(conf, MAX17261_ModelCFG, &value);
 		}
-		max17261_set_full_reported_capacity(conf, conf->DesignCap);
-		max17261_set_reported_capacity(conf, conf->DesignCap);
+
 		ret |= max17261_write_word(conf, MAX17261_Config, 0xA210);
+		// Init option 2
+		if (conf->init_option == 2) {
+			ret |= max17261_write_verify(conf, MAX17261_RComp0, conf->lparams.RCOMP0);
+			ret |= max17261_write_verify(conf, MAX17261_TempCo, conf->lparams.TempCo);
+			ret |= max17261_write_verify(conf, MAX17261_QRTable00,
+			                             conf->lparams.QRTable[0]);
+			ret |= max17261_write_verify(conf, MAX17261_QRTable10,
+			                             conf->lparams.QRTable[1]);
+			ret |= max17261_write_verify(conf, MAX17261_QRTable20,
+			                             conf->lparams.QRTable[2]);
+			ret |= max17261_write_verify(conf, MAX17261_QRTable30,
+			                             conf->lparams.QRTable[3]);
+		}
 		ret |= max17261_write_word(conf, MAX17261_HibCfg,
 		                           conf->HibCFG) ;   // Restore Original HibCFG value
 		// Initialization complete
@@ -244,6 +256,42 @@ max17261_get_TTE(struct max17261_conf *conf)
 	return value * TIME_MULTIPLIER_MIN;
 }
 
+void
+max17261_get_learned_params(struct max17261_conf *conf)
+{
+	max17261_read_word(conf, MAX17261_FullCapNom, &conf->lparams.FullCapNom);
+	max17261_read_word(conf, MAX17261_FullRepCAP, &conf->lparams.FullCapRep);
+	max17261_read_word(conf, MAX17261_RComp0, &conf->lparams.RCOMP0);
+	max17261_read_word(conf, MAX17261_TempCo, &conf->lparams.TempCo);
+	max17261_read_word(conf, MAX17261_Cycles, &conf->lparams.cycles);
+}
+
+void
+max17261_restore_learned_params(struct max17261_conf *conf)
+{
+	uint8_t ret = 0;
+
+	ret |= max17261_write_verify(conf, MAX17261_RComp0, conf->lparams.RCOMP0);
+	ret |= max17261_write_verify(conf, MAX17261_TempCo, conf->lparams.TempCo);
+	ret |= max17261_write_verify(conf, MAX17261_FullRepCAP,
+	                             conf->lparams.FullCapRep);
+	ret |= max17261_write_verify(conf, MAX17261_FullCapNom,
+	                             conf->lparams.FullCapNom);
+	ret |= max17261_write_verify(conf, MAX17261_dPAcc, 0x0C80);
+	ret |= max17261_write_verify(conf, MAX17261_dQAcc,
+	                             conf->lparams.FullCapNom * 2);
+	ret |= max17261_write_verify(conf, MAX17261_Cycles, conf->lparams.cycles);
+}
+
+uint8_t
+max17261_get_qrtable_values(struct max17261_conf *conf)
+{
+	uint8_t ret = 0;
+	ret |= max17261_read_word(conf, MAX17261_QRTable00, &conf->lparams.QRTable[0]);
+	ret |= max17261_read_word(conf, MAX17261_QRTable10, &conf->lparams.QRTable[1]);
+	ret |= max17261_read_word(conf, MAX17261_QRTable20, &conf->lparams.QRTable[2]);
+	ret |= max17261_read_word(conf, MAX17261_QRTable30, &conf->lparams.QRTable[3]);
+}
 /**
  * @brief I2C Read function wrapper
  * Reads 16bit data from device
