@@ -1,6 +1,6 @@
 variables:
   GITLAB_CI_IMAGE_GCC: 'gcc:10.2'
-  GITLAB_CI_IMAGE_ALPINE: 'alpine:3.12'
+  GITLAB_CI_IMAGE_ALPINE: 'alpine:3.15.3'
   GIT_SUBMODULE_STRATEGY: recursive
 
 stages:
