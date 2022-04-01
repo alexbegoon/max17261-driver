@@ -4,12 +4,12 @@ variables:
   GIT_SUBMODULE_STRATEGY: recursive
 
 stages:
-  - style
+  - static
   - build
 
-# 'style' stage
+# 'static' stage
 style:
-  stage: style
+  stage: static
   needs: []
   image: ${GITLAB_CI_IMAGE_GCC}
   before_script:
