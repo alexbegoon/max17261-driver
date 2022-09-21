@@ -23,6 +23,10 @@
 
 #include <stdint.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define MAX17261_ADDRESS			(0x6C)
 #define	MAX17261_RB_THRESHOLD		(3)
 #define R_SENSE 					(0.01)
@@ -172,4 +176,9 @@ void
 max17261_restore_learned_params(struct max17261_conf *conf);
 uint8_t
 max17261_get_qrtable_values(struct max17261_conf *conf);
+
+#ifdef __cplusplus
+}
+#endif
+
 #endif
