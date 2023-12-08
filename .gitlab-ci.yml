@@ -7,6 +7,9 @@ stages:
   - static
   - build
 
+include:
+  - template: 'Workflows/MergeRequest-Pipelines.gitlab-ci.yml'
+
 # 'static' stage
 style:
   stage: static
