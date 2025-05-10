@@ -73,6 +73,23 @@ extern "C" {
 #define MAX17261_QRTable20		(0x32)
 #define MAX17261_QRTable30		(0x42)
 
+// Device Name registers
+// The DevName register holds device type and firmware revision information.
+// This allows host software to easily identify the type of IC being communicated to.
+//
+//      | PART     | ADDRESS | FEATURE                                      |
+//      |----------|---------|----------------------------------------------|
+//      | MAX17260 | 0x4031  | Single-cell optional high-side sensing       |
+//      | MAX17261 | 0x4033  | Multi-cell fuel gauge                        |
+//      | MAX17262 | 0x4039  | Internal current sensing                     |
+//      | MAX17263 | 0x4037  | Single/multi-cell with integrated LED driver |
+//
+#define MAX1726x_DevName (0x21)
+#define MAX1726x_DevName_MAX17260 (0x4031)
+#define MAX1726x_DevName_MAX17261 (0x4033)
+#define MAX1726x_DevName_MAX17262 (0x4039)
+#define MAX1726x_DevName_MAX17263 (0x4037)
+
 //#define MAX17261_BIT_Tsel	(1)
 //#define MAX17261_BIT_SS		(0)
 //#define MAX17261_BIT_ETHERM	(1)
