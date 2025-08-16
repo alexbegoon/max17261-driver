@@ -184,6 +184,8 @@ max17261_err_t
 max17261_get_die_temperature(struct max17261_conf *conf);
 uint16_t
 max17261_get_TTE(struct max17261_conf *conf);
+uint16_t
+max17261_get_TTF(struct max17261_conf *conf);
 max17261_err_t
 max17261_read_word(struct max17261_conf *conf, uint8_t reg, uint16_t *value);
 max17261_err_t
