@@ -59,7 +59,8 @@ extern "C" {
 #define	MAX17261_Temp			(0x08)
 #define	MAX17261_TimeToEmpty	(0x11) //How long before battery is empty (in ms). Refer to page 24 and 13 of AN6358
 #define	MAX17261_VCell  		(0x09) //VCell reports the voltage measured between BATT and CSP.
-#define MAX17261_TTE			(0x11)
+#define MAX17261_TTE			(0x11) // The TTE register holds the estimated time to empty for the application under present temperature and load conditions.
+#define MAX17261_TTF			(0x20) // The TTF register holds the estimated time to full for the application under present conditions.
 #define MAX17261_IChgTerm		(0x1E)
 #define MAX17261_VEmpty			(0x3A)
 #define MAX17261_RComp0			(0x38)

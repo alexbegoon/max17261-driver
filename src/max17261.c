@@ -307,6 +307,14 @@ max17261_get_TTE(struct max17261_conf *conf)
 	return ret ? 0 : value * TIME_MULTIPLIER_MIN;
 }
 
+uint16_t
+max17261_get_TTF(struct max17261_conf *conf)
+{
+	uint16_t value;
+	uint8_t ret = max17261_read_word(conf, MAX17261_TTF, &value);
+	return ret ? 0 : value * TIME_MULTIPLIER_MIN;
+}
+
 max17261_err_t
 max17261_get_learned_params(struct max17261_conf *conf)
 {
